@@ -41,6 +41,8 @@ public class Client {
                     System.out.println("Another y: ");
                     y = sc.nextInt();
                 }
+                gameField = gameLogic.getField();
+                displayGameField(gameField);
             }
         } else if (id.equals(ZERO_TAG)) {
             int subMoveCount = 1;
@@ -60,6 +62,8 @@ public class Client {
                     System.out.println("Another y: ");
                     y = sc.nextInt();
                 }
+                gameField = gameLogic.getField();
+                displayGameField(gameField);
             }
         }
         while (gameLogic.whoWon(id) == null) {
@@ -86,6 +90,8 @@ public class Client {
                     System.out.println("Another y: ");
                     y = sc.nextInt();
                 }
+                gameField = gameLogic.getField();
+                displayGameField(gameField);
             }
         }
 

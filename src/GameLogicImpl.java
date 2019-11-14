@@ -8,10 +8,12 @@ public class GameLogicImpl implements GameLogic {
 
     private static final String CROSS_TAG = "CROSS";
     private static final int CROSS_TAG_ID = 1;
+    private static final int CROSS_KILLED_ZERO = 12;
     private static int crossMoveCount = 0;
 
     private static final String ZERO_TAG = "ZERO";
     private static final int ZERO_TAG_ID = 2;
+    private static final int ZERO_KILLED_CROSS = 21;
     private static int zeroMoveCount = 0;
 
     private static final int FIELD_CAPACITY = 10;
@@ -85,17 +87,24 @@ public class GameLogicImpl implements GameLogic {
             if (x < 0 || x > 9 || y < 0 || y > 9) {
                 return false;
             }
+
             Integer cellValue = gameField.get(x).get(y);
-            // Если данная клетка игрового поля занята
-            if (cellValue != 0) {
-                return false;
-            }
 
             if (!checkNeighbours(x, y, playerId)) {
                 return false;
             }
             if (playerId.equals(CROSS_TAG)) {
-                gameField.get(x).set(y, CROSS_TAG_ID);
+                // Если клетка занята крестиком
+                if (cellValue == CROSS_TAG_ID) {
+                    return false;
+                } else if (cellValue == 0) {
+                    // Ход в доступную клетку
+                    gameField.get(x).set(y, CROSS_TAG_ID);
+                } else if (wantToKill(x, y, playerId)) {
+                    // Убийство нолика
+                    gameField.get(x).set(y, CROSS_KILLED_ZERO);
+                    System.out.println("CROSS KILLED ZERO");
+                }
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 crossMoveCount++;
                 if (crossMoveCount == 3) {
@@ -104,7 +113,16 @@ public class GameLogicImpl implements GameLogic {
                 // winnerId = checkForWin(x, y, BLACK_ID) ? BLACK : null;
 
             } else if (playerId.equals(ZERO_TAG)) {
-                gameField.get(x).set(y, ZERO_TAG_ID);
+                if (cellValue == ZERO_TAG_ID) {
+                    return false;
+                } else if (cellValue == 0) {
+                    // Ход в доступную клетку
+                    gameField.get(x).set(y, ZERO_TAG_ID);
+                } else if (wantToKill(x, y, playerId)) {
+                    // Убийство крестика
+                    gameField.get(x).set(y, ZERO_KILLED_CROSS);
+                    System.out.println("ZERO KILLED CROSS!");
+                }
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 zeroMoveCount++;
             }
@@ -180,7 +198,30 @@ public class GameLogicImpl implements GameLogic {
         return false;
     }
 
-    
+    private static boolean wantToKill(int x, int y, String playerId) {
+        int right = x + 1;
+        int left = x - 1;
+        int top = y - 1;
+        int bottom = y + 1;
+        for (int i = left; i <= right; i++) {
+            for (int j = top; j <= bottom; j++) {
+                if (playerId.equals(CROSS_TAG)) {
+                    if (i != x || j != y) {
+                        if (gameField.get(i).get(j) == ZERO_TAG_ID) {
+                            return true;
+                        }
+                    }
+                } else {
+                    if (i != x || j != y) {
+                        if (gameField.get(i).get(j) == CROSS_TAG_ID) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     private String whoseMove() {
         if ((zeroMoveCount % 3 == 0 || crossMoveCount % 3 == 0) && (crossMoveCount / 3 > zeroMoveCount / 3)) {
