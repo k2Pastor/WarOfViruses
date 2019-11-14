@@ -19,6 +19,8 @@ public class GameLogicImpl implements GameLogic {
     private static String winnerId = null;
 
     private final Object obj = new Object();
+    private static boolean checkCrossInitialMove = false;
+    private static boolean checkZerosInitialMove = false;
 
     private static List<List<Integer>> gameField = new ArrayList<>(FIELD_CAPACITY);
 
@@ -48,7 +50,26 @@ public class GameLogicImpl implements GameLogic {
                     return null;
             }
             System.out.printf("Player %s connected to the game! \n", result);
-            System.out.println("The game started!");
+            if (result.equals(CROSS_TAG)) {
+                while (countOfPlayers != 2) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                        return null;
+                    }
+                }
+            } else if (result.equals(ZERO_TAG)) {
+                while (checkCrossInitialMove == false) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                        return null;
+                    }
+                }
+            }
+        System.out.println("The game started!");
         return result;
     }
 
@@ -75,13 +96,18 @@ public class GameLogicImpl implements GameLogic {
                 gameField.get(x).set(y, CROSS_TAG_ID);
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 crossMoveCount++;
+                if (crossMoveCount == 3) {
+                    checkCrossInitialMove = true;
+                }
                 // winnerId = checkForWin(x, y, BLACK_ID) ? BLACK : null;
 
-            } else {
+            } else if (playerId.equals(ZERO_TAG)) {
                 gameField.get(x).set(y, ZERO_TAG_ID);
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 zeroMoveCount++;
-
+                if (zeroMoveCount == 3) {
+                    checkZerosInitialMove = true;
+                }
             }
             return true;
         }
@@ -89,6 +115,15 @@ public class GameLogicImpl implements GameLogic {
 
     @Override
     public List<List<Integer>> waitForOpponent(String playerId) throws RemoteException {
+            if (playerId.equals(CROSS_TAG) && checkZerosInitialMove == false) {
+                while (checkZerosInitialMove == false) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
 
             while ((!playerId.equals(whoseMove()) && winnerId == null)) {
                 try {
@@ -109,16 +144,15 @@ public class GameLogicImpl implements GameLogic {
     }
 
     private String whoseMove() {
-        if (zeroMoveCount + 3 == crossMoveCount) {
+        if ((zeroMoveCount % 3 == 0 || crossMoveCount % 3 == 0) && (crossMoveCount / 3 > zeroMoveCount / 3)) {
             return ZERO_TAG;
         } else {
             return CROSS_TAG;
         }
+
     }
 
     public static int getFieldCapacity() {
         return FIELD_CAPACITY;
     }
-
-
 }

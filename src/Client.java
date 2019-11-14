@@ -31,7 +31,7 @@ public class Client {
 
             while (subMoveCount <= 3) {
                 int x, y;
-                System.out.print("Make your " + subMoveCount++ + " subMove! x:");
+                System.out.print("Make your " + subMoveCount++ + " subMove! x: ");
                 x = sc.nextInt();
                 System.out.print("y: ");
                 y = sc.nextInt();
@@ -42,14 +42,13 @@ public class Client {
                     y = sc.nextInt();
                 }
             }
-
         } else if (id.equals(ZERO_TAG)) {
             int subMoveCount = 1;
             System.out.println("Initial move of zeros! SubMove " + subMoveCount++ + " at (9, 9).");
             gameLogic.makeMove(createPoint(9, 9), id);
             while (subMoveCount <= 3) {
                 int x, y;
-                System.out.print("Make your " + subMoveCount++ + " subMove! x:");
+                System.out.print("Make your " + subMoveCount++ + " subMove! x: ");
                 x = sc.nextInt();
                 System.out.print("y: ");
                 y = sc.nextInt();
@@ -61,33 +60,33 @@ public class Client {
                 }
             }
         }
+            while (gameLogic.whoWon(id) == null) {
+                System.out.println("Waiting for another player! ");
+                gameField = gameLogic.waitForOpponent(id);
+                System.out.println("Move of " + id + " player!");
+                // Условие на окончание игры
+                if (gameLogic.whoWon(id) != null) {
+                    System.out.println("Player " + gameLogic.whoWon(id) + " won!");
+                    return;
+                }
+                displayGameField(gameField);
+                System.out.println("Other player made his turn, make your own!");
+                int subMoveCount = 1;
+                while (subMoveCount <= 3) {
+                    int x, y;
+                    System.out.print("Make your " + subMoveCount++ + " subMove! x: ");
+                    x = sc.nextInt();
+                    System.out.print("y: ");
+                    y = sc.nextInt();
+                    while (!gameLogic.makeMove(createPoint(x, y), id)) {
+                        System.out.println("You made an invalid move, please enter another x: ");
+                        x = sc.nextInt();
+                        System.out.println("Another y: ");
+                        y = sc.nextInt();
+                    }
+                }
+            }
 
-        while (gameLogic.whoWon(id) == null) {
-            System.out.println("Waiting for another player! ");
-            gameField = gameLogic.waitForOpponent(id);
-            System.out.println("Move of " + id + " player!");
-            // Условие на окончание игры
-            if (gameLogic.whoWon(id) != null) {
-                System.out.println("Player " + gameLogic.whoWon(id) + " won!");
-                return;
-            }
-            displayGameField(gameField);
-            System.out.println("Other player made his turn, make your own!");
-            int subMoveCount = 1;
-            while (subMoveCount <= 3) {
-                int x, y;
-                System.out.print("Make your " + subMoveCount++ + " subMove! x:");
-                x = sc.nextInt();
-                System.out.print("y: ");
-                y = sc.nextInt();
-                while (!gameLogic.makeMove(createPoint(x, y), id)) {
-                    System.out.println("You made an invalid move, please enter another x: ");
-                    x = sc.nextInt();
-                    System.out.println("Another y: ");
-                    y = sc.nextInt();
-                }
-            }
-        }
     }
 
     private static void displayGameField(List<List<Integer>> gameField) {
