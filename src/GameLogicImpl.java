@@ -20,8 +20,6 @@ public class GameLogicImpl implements GameLogic {
 
     private final Object obj = new Object();
     private static boolean checkCrossInitialMove = false;
-    private static boolean checkZerosInitialMove = false;
-
     private static List<List<Integer>> gameField = new ArrayList<>(FIELD_CAPACITY);
 
 
@@ -39,43 +37,43 @@ public class GameLogicImpl implements GameLogic {
     @Override
     public String getId() throws RemoteException {
         String result;
-            switch (countOfPlayers++) {
-                case 0:
-                    result = CROSS_TAG;
-                    break;
-                case 1:
-                    result = ZERO_TAG;
-                    break;
-                default:
+        switch (countOfPlayers++) {
+            case 0:
+                result = CROSS_TAG;
+                break;
+            case 1:
+                result = ZERO_TAG;
+                break;
+            default:
+                return null;
+        }
+        System.out.printf("Player %s connected to the game! \n", result);
+        if (result.equals(CROSS_TAG)) {
+            while (countOfPlayers != 2) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
                     return null;
-            }
-            System.out.printf("Player %s connected to the game! \n", result);
-            if (result.equals(CROSS_TAG)) {
-                while (countOfPlayers != 2) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                        return null;
-                    }
-                }
-            } else if (result.equals(ZERO_TAG)) {
-                while (checkCrossInitialMove == false) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                        return null;
-                    }
                 }
             }
+        } else if (result.equals(ZERO_TAG)) {
+            while (checkCrossInitialMove == false) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                    return null;
+                }
+            }
+        }
         System.out.println("The game started!");
         return result;
     }
 
     @Override
     public List getField() throws RemoteException {
-            return gameField;
+        return gameField;
     }
 
     @Override
@@ -92,6 +90,10 @@ public class GameLogicImpl implements GameLogic {
             if (cellValue != 0) {
                 return false;
             }
+
+            if (!checkNeighbours(x, y, playerId)) {
+                return false;
+            }
             if (playerId.equals(CROSS_TAG)) {
                 gameField.get(x).set(y, CROSS_TAG_ID);
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
@@ -105,9 +107,6 @@ public class GameLogicImpl implements GameLogic {
                 gameField.get(x).set(y, ZERO_TAG_ID);
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 zeroMoveCount++;
-                if (zeroMoveCount == 3) {
-                    checkZerosInitialMove = true;
-                }
             }
             return true;
         }
@@ -115,24 +114,14 @@ public class GameLogicImpl implements GameLogic {
 
     @Override
     public List<List<Integer>> waitForOpponent(String playerId) throws RemoteException {
-            if (playerId.equals(CROSS_TAG) && checkZerosInitialMove == false) {
-                while (checkZerosInitialMove == false) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
-                }
+        while ((!playerId.equals(whoseMove()) && winnerId == null)) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
             }
-
-            while ((!playerId.equals(whoseMove()) && winnerId == null)) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
-            }
-                return gameField;
+        }
+        return gameField;
     }
 
     @Override
@@ -142,6 +131,56 @@ public class GameLogicImpl implements GameLogic {
         }
         return winnerId;
     }
+
+
+    private boolean checkNeighbours(int x, int y, String playerId) {
+        // Нам не нужно проверять соседей для первых ходов
+        if (playerId.equals(CROSS_TAG) && crossMoveCount == 0) {
+            return true;
+        }
+        if (playerId.equals(ZERO_TAG) && zeroMoveCount == 0) {
+            return true;
+        }
+
+        int right = x + 1;
+        int left = x - 1;
+        int top = y - 1;
+        int bottom = y + 1;
+
+        if (right == 10) {
+            right--;
+        }
+        if (left == -1) {
+            left++;
+        }
+        if (top == -1) {
+            top++;
+        }
+        if (bottom == 10) {
+            bottom--;
+        }
+        for (int i = left; i <= right; i++) {
+            for (int j = top; j <= bottom; j++) {
+                if (playerId.equals(CROSS_TAG)) {
+                    if (i != x || j != y) {
+                        // System.out.println("Value [" + i + "][" + j + "] = " + gameField.get(i).get(j));
+                        if (gameField.get(i).get(j) == CROSS_TAG_ID) {
+                            return true;
+                        }
+                    }
+                } else {
+                    if (i != x || j != y) {
+                        if (gameField.get(i).get(j) == ZERO_TAG_ID) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    
 
     private String whoseMove() {
         if ((zeroMoveCount % 3 == 0 || crossMoveCount % 3 == 0) && (crossMoveCount / 3 > zeroMoveCount / 3)) {
