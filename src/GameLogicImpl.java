@@ -23,7 +23,6 @@ public class GameLogicImpl implements GameLogic {
     private final Object obj = new Object();
     private static boolean checkCrossInitialMove = false;
     private static List<List<Integer>> gameField = new ArrayList<>(FIELD_CAPACITY);
-    private static String lastMove = null;
 
 
     public GameLogicImpl() {
