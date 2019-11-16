@@ -23,6 +23,7 @@ public class GameLogicImpl implements GameLogic {
     private final Object obj = new Object();
     private static boolean checkCrossInitialMove = false;
     private static List<List<Integer>> gameField = new ArrayList<>(FIELD_CAPACITY);
+    private static String lastMove = null;
 
 
     public GameLogicImpl() {
@@ -110,7 +111,7 @@ public class GameLogicImpl implements GameLogic {
                 if (crossMoveCount == 3) {
                     checkCrossInitialMove = true;
                 }
-                // winnerId = checkForWin(x, y, BLACK_ID) ? BLACK : null;
+                winnerId = checkVictory(playerId) ? playerId : null;
 
             } else if (playerId.equals(ZERO_TAG)) {
                 if (cellValue == ZERO_TAG_ID) {
@@ -125,6 +126,7 @@ public class GameLogicImpl implements GameLogic {
                 }
                 System.out.println("Player " + playerId + " made his move on point" + "(" + x + "," + y + ")");
                 zeroMoveCount++;
+                winnerId = checkVictory(playerId) ? playerId : null;
             }
             return true;
         }
@@ -149,7 +151,6 @@ public class GameLogicImpl implements GameLogic {
         }
         return winnerId;
     }
-
 
     private boolean checkNeighbours(int x, int y, String playerId) {
         // Нам не нужно проверять соседей для первых ходов
@@ -177,18 +178,19 @@ public class GameLogicImpl implements GameLogic {
         if (bottom == 10) {
             bottom--;
         }
+
         for (int i = left; i <= right; i++) {
             for (int j = top; j <= bottom; j++) {
                 if (playerId.equals(CROSS_TAG)) {
                     if (i != x || j != y) {
                         // System.out.println("Value [" + i + "][" + j + "] = " + gameField.get(i).get(j));
-                        if (gameField.get(i).get(j) == CROSS_TAG_ID) {
+                        if (gameField.get(i).get(j) == CROSS_TAG_ID || gameField.get(i).get(j) == CROSS_KILLED_ZERO) {
                             return true;
                         }
                     }
                 } else {
                     if (i != x || j != y) {
-                        if (gameField.get(i).get(j) == ZERO_TAG_ID) {
+                        if (gameField.get(i).get(j) == ZERO_TAG_ID || gameField.get(i).get(j) == ZERO_KILLED_CROSS) {
                             return true;
                         }
                     }
@@ -198,7 +200,7 @@ public class GameLogicImpl implements GameLogic {
         return false;
     }
 
-    private static boolean wantToKill(int x, int y, String playerId) {
+    private boolean wantToKill(int x, int y, String playerId) {
         int right = x + 1;
         int left = x - 1;
         int top = y - 1;
@@ -222,6 +224,28 @@ public class GameLogicImpl implements GameLogic {
         }
         return false;
     }
+
+    private boolean checkVictory(String playerId) {
+        // Для того, чтобы крестики не выиграли в первом ходе
+        if (playerId.equals(CROSS_TAG) && crossMoveCount / 3 == 1) {
+            return false;
+        }
+        for (int i = 0; i < getFieldCapacity(); i++) {
+            for (int j = 0; j < getFieldCapacity(); j++) {
+                if (playerId.equals(CROSS_TAG)) {
+                    if (gameField.get(i).get(j) == ZERO_TAG_ID) {
+                        return false;
+                    }
+                } else {
+                    if (gameField.get(i).get(j) == CROSS_TAG_ID) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
 
     private String whoseMove() {
         if ((zeroMoveCount % 3 == 0 || crossMoveCount % 3 == 0) && (crossMoveCount / 3 > zeroMoveCount / 3)) {

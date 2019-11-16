@@ -4,7 +4,6 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.sql.SQLOutput;
 import java.util.List;
 import java.util.Scanner;
 
@@ -15,6 +14,8 @@ public class Client {
     private String id;
     private GameLogic gameLogic;
     private static List<List<Integer>> gameField;
+
+
 
     private Client(String id, GameLogic gameLogic) throws RemoteException {
         Scanner sc = new Scanner(System.in);
@@ -89,6 +90,10 @@ public class Client {
                     x = sc.nextInt();
                     System.out.println("Another y: ");
                     y = sc.nextInt();
+                }
+                if (gameLogic.whoWon(id) != null) {
+                    System.out.println("Player " + gameLogic.whoWon(id) + " won!");
+                    return;
                 }
                 gameField = gameLogic.getField();
                 displayGameField(gameField);
